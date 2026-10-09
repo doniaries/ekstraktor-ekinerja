@@ -55,5 +55,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         sendResponse({ success, msg });
+        return true;
+    }
+    
+    if (request.action === 'fillBukti') {
+        let success = false;
+        let msg = '';
+        
+        try {
+            const visibleModals = Array.from(document.querySelectorAll('.modal.show, .modal[style*="display: block"], .swal2-popup')).filter(el => {
+                const style = window.getComputedStyle(el);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+
+            const container = visibleModals.length > 0 ? visibleModals[visibleModals.length - 1] : document;
+
+            const inputs = Array.from(container.querySelectorAll('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]):not([type="submit"]):not([type="button"]):not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly])')).filter(el => {
+                const style = window.getComputedStyle(el);
+                return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+            });
+
+            if (inputs.length >= 2) {
+                // Biasanya input pertama adalah Nama Bukti Dukung, yang kedua adalah Link
+                const namaInput = inputs[0];
+                const linkInput = inputs[1];
+
+                namaInput.value = request.nama;
+                namaInput.dispatchEvent(new Event('input', { bubbles: true }));
+                namaInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                linkInput.value = request.link;
+                linkInput.dispatchEvent(new Event('input', { bubbles: true }));
+                linkInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                success = true;
+                msg = 'Berhasil mengisi Bukti Dukung!';
+            } else {
+                msg = 'Tidak dapat menemukan kolom input Bukti Dukung! Pastikan form popup sudah terbuka.';
+            }
+
+        } catch (error) {
+            console.error('Error autofill bukti:', error);
+            msg = 'Terjadi kesalahan sistem autofill.';
+        }
+
+        sendResponse({ success, msg });
+        return true;
     }
 });

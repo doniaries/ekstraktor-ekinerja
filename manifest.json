@@ -13,7 +13,8 @@
   ],
   "host_permissions": [
     "https://kinerja.bkn.go.id/*",
-    "https://docs.google.com/*"
+    "https://docs.google.com/*",
+    "https://drive.google.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,6 +23,10 @@
     {
       "matches": ["https://kinerja.bkn.go.id/*"],
       "js": ["content-ekinerja.js"]
+    },
+    {
+      "matches": ["https://drive.google.com/*"],
+      "js": ["content-drive.js"]
     }
   ],
   "side_panel": {
