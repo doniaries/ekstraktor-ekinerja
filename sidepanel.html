@@ -17,6 +17,14 @@
         </header>
 
         <main class="content">
+            <!-- TABS -->
+            <div class="tabs-container" style="display:flex; margin-bottom:15px; border-radius:8px; background:var(--surface); overflow:hidden; border:1px solid var(--border);">
+                <button id="tab-aksi" class="tab-btn active" style="flex:1; padding:10px; border:none; background:var(--accent); color:white; font-weight:600; cursor:pointer;">Rencana Aksi</button>
+                <button id="tab-bukti" class="tab-btn" style="flex:1; padding:10px; border:none; background:transparent; color:var(--text-secondary); font-weight:600; cursor:pointer;">Bukti Dukung</button>
+            </div>
+
+            <!-- VIEW AKSI -->
+            <div id="view-aksi">
             <div class="glass-card" id="input-section">
                 <div class="card-header">
                     <span class="step-number">1</span>
@@ -55,6 +63,38 @@
 
                 <div id="item-list" class="item-list">
                     <!-- Hasil ekstraksi akan muncul di sini -->
+                </div>
+            </div>
+            </div>
+
+            <!-- VIEW BUKTI -->
+            <div id="view-bukti" style="display:none;">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <span class="step-number">1</span>
+                        <h2>Ambil Data Drive</h2>
+                    </div>
+                    <p class="instructions">Buka folder Bukti Dukung di tab <b>Google Drive</b>, lalu klik tombol ini:</p>
+                    <button id="btn-fetch-drive" class="btn-primary" style="padding: 12px; background: #8b5cf6; width:100%; justify-content:center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.3-3-2.7-5.4-5.8-5.6-3.6-.2-6.6 2.5-7.1 5.9-.2.8-.2 1.7 0 2.5-1.9.5-3.3 2.1-3.4 4.1-.2 2.3 1.7 4.5 4 4.5h14c1.5 0 2.9-1 3.5-2.4 0-.1 0-.1-.1-1.6z"></path><path d="M12 11v7"></path><path d="M9 14l3-3 3 3"></path></svg>
+                        Ambil Folder dari Drive Aktif
+                    </button>
+                </div>
+                
+                <div class="glass-card" id="drive-results-section" style="display: none; margin-top:15px;">
+                    <div class="card-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="step-number">2</span>
+                            <h2>Isi Bukti Dukung</h2>
+                        </div>
+                        <span class="badge" id="drive-count-badge">0 file</span>
+                    </div>
+                    
+                    <div class="search-box">
+                        <input type="text" id="search-drive-input" placeholder="Cari nama file...">
+                    </div>
+
+                    <div id="drive-list" class="item-list"></div>
                 </div>
             </div>
         </main>

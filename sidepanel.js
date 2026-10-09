@@ -7,8 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const countBadge = document.getElementById('count-badge');
     const searchInput = document.getElementById('search-input');
     const toast = document.getElementById('toast');
+    
+    // Tab Elements
+    const tabAksi = document.getElementById('tab-aksi');
+    const tabBukti = document.getElementById('tab-bukti');
+    const viewAksi = document.getElementById('view-aksi');
+    const viewBukti = document.getElementById('view-bukti');
+    
+    // Drive Elements
+    const btnFetchDrive = document.getElementById('btn-fetch-drive');
+    const driveResultsSection = document.getElementById('drive-results-section');
+    const driveList = document.getElementById('drive-list');
+    const driveCountBadge = document.getElementById('drive-count-badge');
+    const searchDriveInput = document.getElementById('search-drive-input');
 
     let parsedData = [];
+    let driveData = [];
 
     const defaultData = [
         { id: 1, sasaran: 'Meningkatnya daya tarik pariwisata', indikator: 'Persentase peningkatan promosi pariwisata', target: '5,88' },
@@ -22,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // Load saved data
-    chrome.storage.local.get(['skpData'], (result) => {
+    chrome.storage.local.get(['skpData', 'driveData'], (result) => {
         if (result.skpData && result.skpData.length > 0) {
             parsedData = result.skpData;
             renderList(parsedData);
@@ -31,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
             parsedData = defaultData;
             chrome.storage.local.set({ skpData: parsedData });
             renderList(parsedData);
+        }
+        
+        if (result.driveData && result.driveData.length > 0) {
+            driveData = result.driveData;
+            renderDriveList(driveData);
         }
     });
 
@@ -111,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
             parsedData = [];
             chrome.storage.local.remove(['skpData']);
             renderList([]);
-            pasteArea.value = '';
         }
     });
 
@@ -123,6 +141,144 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         renderList(filtered);
     });
+
+    // --- TAB LOGIC ---
+    tabAksi.addEventListener('click', () => {
+        tabAksi.classList.add('active');
+        tabAksi.style.background = 'var(--accent)';
+        tabAksi.style.color = 'white';
+        
+        tabBukti.classList.remove('active');
+        tabBukti.style.background = 'transparent';
+        tabBukti.style.color = 'var(--text-secondary)';
+        
+        viewAksi.style.display = 'block';
+        viewBukti.style.display = 'none';
+    });
+
+    tabBukti.addEventListener('click', () => {
+        tabBukti.classList.add('active');
+        tabBukti.style.background = 'var(--accent)';
+        tabBukti.style.color = 'white';
+        
+        tabAksi.classList.remove('active');
+        tabAksi.style.background = 'transparent';
+        tabAksi.style.color = 'var(--text-secondary)';
+        
+        viewBukti.style.display = 'block';
+        viewAksi.style.display = 'none';
+    });
+
+    // --- DRIVE LOGIC ---
+    btnFetchDrive.addEventListener('click', () => {
+        btnFetchDrive.disabled = true;
+        btnFetchDrive.innerHTML = 'Sedang mencari...';
+        
+        chrome.tabs.query({url: "*://drive.google.com/*"}, (tabs) => {
+            if (tabs.length === 0) {
+                showToast('Buka folder Google Drive terlebih dahulu!', true);
+                btnFetchDrive.innerHTML = 'Ambil Folder dari Drive Aktif';
+                btnFetchDrive.disabled = false;
+                return;
+            }
+            
+            // Pilih tab Drive yang sedang aktif/terakhir diakses
+            const driveTab = tabs[0];
+            
+            chrome.tabs.sendMessage(driveTab.id, { action: 'extractDriveFiles' }, (response) => {
+                btnFetchDrive.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.3-3-2.7-5.4-5.8-5.6-3.6-.2-6.6 2.5-7.1 5.9-.2.8-.2 1.7 0 2.5-1.9.5-3.3 2.1-3.4 4.1-.2 2.3 1.7 4.5 4 4.5h14c1.5 0 2.9-1 3.5-2.4 0-.1 0-.1-.1-1.6z"></path><path d="M12 11v7"></path><path d="M9 14l3-3 3 3"></path></svg> Ambil Folder dari Drive Aktif';
+                btnFetchDrive.disabled = false;
+                
+                if (chrome.runtime.lastError) {
+                    showToast('Gagal terhubung ke Drive. Coba refresh halaman Drive.', true);
+                    return;
+                }
+                
+                if (response && response.success) {
+                    driveData = response.files;
+                    chrome.storage.local.set({ driveData });
+                    renderDriveList(driveData);
+                    showToast(\`Berhasil mendapatkan \${driveData.length} file!\`);
+                } else {
+                    showToast(response ? response.msg : 'Gagal mengekstrak data dari Drive', true);
+                }
+            });
+        });
+    });
+    
+    searchDriveInput.addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase();
+        const filtered = driveData.filter(item => item.name.toLowerCase().includes(keyword));
+        renderDriveList(filtered);
+    });
+
+    function renderDriveList(files) {
+        driveList.innerHTML = '';
+        driveCountBadge.textContent = \`\${files.length} file\`;
+        
+        if (files.length === 0) {
+            driveResultsSection.style.display = 'none';
+            return;
+        }
+        
+        driveResultsSection.style.display = 'block';
+        
+        files.forEach((file, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'data-card';
+            itemDiv.style.background = 'var(--surface)';
+            itemDiv.style.border = '1px solid var(--border)';
+            itemDiv.style.padding = '12px';
+            itemDiv.style.borderRadius = '8px';
+            itemDiv.style.marginBottom = '10px';
+            
+            const uniqueId = \`drive-\${Date.now()}-\${index}\`;
+            
+            itemDiv.innerHTML = \`
+                <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase; font-weight:600; letter-spacing:0.5px; margin-bottom:4px;">File Drive</div>
+                <div style="font-weight:600; margin-bottom:6px; color:var(--text-primary); line-height:1.4; word-break: break-all;">\${file.name}</div>
+                <div style="display:flex; gap:6px; margin-top:12px;">
+                    <button class="btn-primary" style="flex:1; justify-content:center; background:#8b5cf6;" id="isi-\${uniqueId}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> 
+                        Isi Bukti Dukung
+                    </button>
+                    <button class="copy-btn" style="padding:8px 10px;" id="copy-\${uniqueId}" title="Copy Link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            \`;
+            
+            driveList.appendChild(itemDiv);
+            
+            setTimeout(() => {
+                const isiBtn = document.getElementById(\`isi-\${uniqueId}\`);
+                const copyBtn = document.getElementById(\`copy-\${uniqueId}\`);
+                
+                if (isiBtn) {
+                    isiBtn.onclick = () => {
+                        chrome.tabs.query({url: "*://*.bkn.go.id/*"}, (tabs) => {
+                            const targetTab = tabs.find(t => t.url.includes('kinerja.bkn.go.id'));
+                            if (targetTab) {
+                                chrome.tabs.sendMessage(targetTab.id, { action: 'fillBukti', nama: file.name, link: file.link }, (response) => {
+                                    if (response && response.success) {
+                                        showToast(response.msg);
+                                    } else {
+                                        showToast(response ? response.msg : 'Gagal terhubung! Coba reload tab e-kinerja.', true);
+                                    }
+                                });
+                            } else {
+                                showToast('Buka tab kinerja.bkn.go.id terlebih dahulu!', true);
+                            }
+                        });
+                    };
+                }
+                
+                if (copyBtn) {
+                    copyBtn.onclick = () => copyToClipboard(file.link);
+                }
+            }, 0);
+        });
+    }
 
     function parseTsv(text) {
         const lines = text.trim().split('\n');
