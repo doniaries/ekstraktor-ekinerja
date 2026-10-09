@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Ekstraktor E-Kinerja",
+  "description": "Membantu mengekstrak dan mengisi data Rencana Aksi E-Kinerja secara otomatis.",
+  "author": "doni aries 2026",
+  "version": "1.0.0",
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "clipboardRead",
+    "sidePanel",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://kinerja.bkn.go.id/*",
+    "https://docs.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://kinerja.bkn.go.id/*"],
+      "js": ["content-ekinerja.js"]
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Ekstraktor E-Kinerja"
+  }
+}

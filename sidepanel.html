@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekstraktor E-Kinerja</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-bg"></div>
+            <h1>Ekstraktor E-Kinerja</h1>
+            <p class="subtitle">Mempermudah input Rencana Aksi & Target</p>
+            <div class="author">dibuat oleh doni aries 2026</div>
+        </header>
+
+        <main class="content">
+            <div class="glass-card" id="input-section">
+                <div class="card-header">
+                    <span class="step-number">1</span>
+                    <h2>Ambil Data SKP</h2>
+                </div>
+                <p class="instructions">Buka tab Google Sheet yang berisi data SKP, lalu klik tombol di bawah ini:</p>
+                <div class="actions" style="flex-direction: column;">
+                    <button id="btn-fetch-sheet" class="btn-primary" style="padding: 12px; background: #10b981;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Ambil dari Google Sheet Aktif
+                    </button>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button id="btn-parse-clipboard" class="btn-primary" style="flex: 2; background: var(--accent);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                            Paste dari Clipboard
+                        </button>
+                        <button id="btn-clear" class="btn-secondary" style="flex: 1;" title="Hapus Data">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card" id="results-section" style="display: none;">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="step-number">2</span>
+                        <h2>Copy ke E-Kinerja</h2>
+                    </div>
+                    <span class="badge" id="count-badge">0 item</span>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Cari sasaran atau indikator...">
+                </div>
+
+                <div id="item-list" class="item-list">
+                    <!-- Hasil ekstraksi akan muncul di sini -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Berhasil dicopy!</div>
+
+    <script src="sidepanel.js"></script>
+</body>
+</html>
