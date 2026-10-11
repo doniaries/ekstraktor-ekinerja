@@ -203,7 +203,8 @@ button {
     flex-direction: column;
     gap: 12px;
     margin-top: 8px;
-    max-height: 400px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-right: 4px;
 }
@@ -227,6 +228,7 @@ button {
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
 }
 
 .sasaran-title {
