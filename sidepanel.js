@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     driveData = response.files;
                     chrome.storage.local.set({ driveData });
                     renderDriveList(driveData);
-                    showToast(\`Berhasil mendapatkan \${driveData.length} file!\`);
+                    showToast(`Berhasil mendapatkan ${driveData.length} file!`);
                 } else {
                     showToast(response ? response.msg : 'Gagal mengekstrak data dari Drive', true);
                 }
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderDriveList(files) {
         driveList.innerHTML = '';
-        driveCountBadge.textContent = \`\${files.length} file\`;
+        driveCountBadge.textContent = `${files.length} file`;
         
         if (files.length === 0) {
             driveResultsSection.style.display = 'none';
@@ -232,27 +232,27 @@ document.addEventListener('DOMContentLoaded', () => {
             itemDiv.style.borderRadius = '8px';
             itemDiv.style.marginBottom = '10px';
             
-            const uniqueId = \`drive-\${Date.now()}-\${index}\`;
+            const uniqueId = `drive-${Date.now()}-${index}`;
             
-            itemDiv.innerHTML = \`
+            itemDiv.innerHTML = `
                 <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase; font-weight:600; letter-spacing:0.5px; margin-bottom:4px;">File Drive</div>
-                <div style="font-weight:600; margin-bottom:6px; color:var(--text-primary); line-height:1.4; word-break: break-all;">\${file.name}</div>
+                <div style="font-weight:600; margin-bottom:6px; color:var(--text-primary); line-height:1.4; word-break: break-all;">${file.name}</div>
                 <div style="display:flex; gap:6px; margin-top:12px;">
-                    <button class="btn-primary" style="flex:1; justify-content:center; background:#8b5cf6;" id="isi-\${uniqueId}">
+                    <button class="btn-primary" style="flex:1; justify-content:center; background:#8b5cf6;" id="isi-${uniqueId}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> 
                         Isi Bukti Dukung
                     </button>
-                    <button class="copy-btn" style="padding:8px 10px;" id="copy-\${uniqueId}" title="Copy Link">
+                    <button class="copy-btn" style="padding:8px 10px;" id="copy-${uniqueId}" title="Copy Link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     </button>
                 </div>
-            \`;
+            `;
             
             driveList.appendChild(itemDiv);
             
             setTimeout(() => {
-                const isiBtn = document.getElementById(\`isi-\${uniqueId}\`);
-                const copyBtn = document.getElementById(\`copy-\${uniqueId}\`);
+                const isiBtn = document.getElementById(`isi-${uniqueId}`);
+                const copyBtn = document.getElementById(`copy-${uniqueId}`);
                 
                 if (isiBtn) {
                     isiBtn.onclick = () => {
@@ -375,30 +375,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemDiv.style.padding = '12px';
                 itemDiv.style.borderRadius = '8px';
                 
-                const uniqueId = \`\${Date.now()}-\${index}\`;
+                const uniqueId = `${Date.now()}-${index}`;
                 
                 // Gunakan innerHTML penuh untuk memastikan tombol terender
-                itemDiv.innerHTML = \`
+                itemDiv.innerHTML = `
                     <div style="font-size:10px; color:var(--text-secondary); text-transform:uppercase; font-weight:600; letter-spacing:0.5px; margin-bottom:4px;">Rencana Aksi</div>
-                    <div style="font-weight:600; margin-bottom:6px; color:var(--text-primary); line-height:1.4;">\${item.indikator}</div>
-                    \${item.target ? \`<div style="font-size:12px; color:var(--text-secondary);">Target: <span style="font-weight:600; color:var(--text-primary);">\${item.target}</span></div>\` : ''}
+                    <div style="font-weight:600; margin-bottom:6px; color:var(--text-primary); line-height:1.4;">${item.indikator}</div>
+                    ${item.target ? `<div style="font-size:12px; color:var(--text-secondary);">Target: <span style="font-weight:600; color:var(--text-primary);">${item.target}</span></div>` : ''}
                     <div style="display:flex; gap:6px; margin-top:12px;">
-                        <button class="btn-primary" style="flex:1; justify-content:center;" id="isi-\${uniqueId}">
+                        <button class="btn-primary" style="flex:1; justify-content:center;" id="isi-${uniqueId}">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> 
                             Isi Form E-Kinerja
                         </button>
-                        <button class="copy-btn" style="padding:8px 10px;" id="copy-\${uniqueId}" title="Copy Text">
+                        <button class="copy-btn" style="padding:8px 10px;" id="copy-${uniqueId}" title="Copy Text">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                         </button>
                     </div>
-                \`;
+                `;
                 
                 contentDiv.appendChild(itemDiv);
 
                 // Tambahkan event listener setelah elemen dimasukkan
                 setTimeout(() => {
-                    const isiBtn = document.getElementById(\`isi-\${uniqueId}\`);
-                    const copyBtn = document.getElementById(\`copy-\${uniqueId}\`);
+                    const isiBtn = document.getElementById(`isi-${uniqueId}`);
+                    const copyBtn = document.getElementById(`copy-${uniqueId}`);
                     
                     if (isiBtn) {
                         isiBtn.onclick = () => {
