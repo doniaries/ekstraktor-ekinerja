@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            const driveTab = tabs[0];
+            const driveTab = tabs.find(t => t.active) || tabs[0];
             
             const handleDriveResponse = (response) => {
                 btnFetchDrive.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.3-3-2.7-5.4-5.8-5.6-3.6-.2-6.6 2.5-7.1 5.9-.2.8-.2 1.7 0 2.5-1.9.5-3.3 2.1-3.4 4.1-.2 2.3 1.7 4.5 4 4.5h14c1.5 0 2.9-1 3.5-2.4 0-.1 0-.1-.1-1.6z"></path><path d="M12 11v7"></path><path d="M9 14l3-3 3 3"></path></svg> Ambil Folder dari Drive Aktif';

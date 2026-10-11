@@ -2,127 +2,208 @@ if (window.__driveMessageListener) {
     chrome.runtime.onMessage.removeListener(window.__driveMessageListener);
 }
 
+function parseDriveAriaLabel(raw) {
+    if (!raw) return { name: '', isFolder: false };
+    const lower = raw.toLowerCase();
+    const isFolder = lower.startsWith('folder') || 
+                     lower.includes('shared folder') || 
+                     lower.includes('folder bersama') || 
+                     lower.includes('folder dibagikan');
+    
+    let name = raw;
+    
+    // Google Drive memisahkan tipe, nama, dan metadata dengan koma
+    // Contoh: "Folder bersama, Meningkatnya daya tarik..., Dimodifikasi oleh..."
+    // Contoh: "Google Spreadsheet, PERJANJIAN KINERJA, Dimodifikasi oleh..."
+    const parts = raw.split(',').map(p => p.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+        const firstPart = parts[0].toLowerCase();
+        const knownTypes = [
+            'folder', 'folder bersama', 'folder dibagikan', 'shared folder', 
+            'file', 'google spreadsheet', 'google docs', 'google dokumen', 
+            'google slides', 'google slide', 'pdf', 'microsoft word', 'microsoft excel'
+        ];
+        if (knownTypes.some(t => firstPart === t || firstPart.startsWith(t))) {
+            name = parts[1];
+        }
+    }
+    
+    // Bersihkan prefix jika masih menempel
+    name = name
+        .replace(/^(Folder bersama|Folder dibagikan|Shared folder|Folder|File|Google Spreadsheet|Google Dokumen|Google Docs|Google Slides|Microsoft Word|Microsoft Excel|PDF)[:,\s]+/i, '')
+        .trim();
+        
+    // Bersihkan suffix metadata
+    name = name
+        .replace(/,\s*(Dimodifikasi|Dimiliki|Modified|Owned|Terakhir diubah|Last modified|Dipilih|Selected).*$/i, '')
+        .replace(/\s*(Google Spreadsheet|Google Docs|Google Slides|Microsoft Word|Microsoft Excel|PDF|Dibagikan|Shared)\s*$/i, '')
+        .trim();
+        
+    return { name, isFolder };
+}
+
 window.__driveMessageListener = (request, sender, sendResponse) => {
     if (request.action === 'extractDriveFiles') {
         try {
             const filesMap = new Map();
 
             // ================================================================
-            // STRATEGI: Cari setiap baris item di Google Drive
-            // Setiap baris (row) dalam list view Google Drive merupakan
-            // elemen dengan role="row". Dari setiap row kita ambil
-            // HANYA anchor pertama yang mengarah ke folder Drive.
-            // Ini mencegah ikutnya link breadcrumb / parent folder.
+            // STRATEGI 1: Elemen Baris (List View & Grid View)
+            // Google Drive menggunakan [role="row"] pada list view
+            // dan [role="gridcell"] atau card pada grid view.
+            // ID biasanya ada di atribut `data-id` pada row atau anaknya.
             // ================================================================
+            const itemContainers = document.querySelectorAll(
+                '[role="main"] [role="row"], ' +
+                '[role="grid"] [role="row"], ' +
+                '[role="row"], ' +
+                '[data-target="item"], ' +
+                'c-wiz [data-id]'
+            );
 
-            // Coba ambil baris dari List View (role="row")
-            const rows = document.querySelectorAll('[role="row"], [role="listitem"], [role="gridcell"]');
+            itemContainers.forEach(container => {
+                // Abaikan jika berada di sidebar navigasi kiri, breadcrumb header, atau menu
+                if (container.closest('[role="navigation"], nav, header, [role="banner"]')) return;
 
-            rows.forEach(row => {
-                // Ambil semua anchor di dalam row ini
-                const anchors = row.querySelectorAll('a[href]');
-                
-                for (const anchor of anchors) {
-                    const href = anchor.getAttribute('href') || '';
+                const rect = container.getBoundingClientRect();
+                // Abaikan elemen di bagian atas halaman (header / search / breadcrumb)
+                if (rect.top < 120 && rect.height < 50) return;
 
-                    // Hanya proses jika mengarah ke folder Drive
-                    const folderMatch = href.match(/\/drive\/folders\/([a-zA-Z0-9_-]{10,})/);
-                    if (!folderMatch) continue;
+                // Dapatkan ID
+                let id = container.getAttribute('data-id') 
+                    || container.getAttribute('data-item-id')
+                    || container.querySelector('[data-id]')?.getAttribute('data-id')
+                    || container.closest('[data-id]')?.getAttribute('data-id');
 
-                    const id = folderMatch[1];
-                    if (!id || filesMap.has(id)) break; // sudah diproses, skip baris ini
-
-                    // Ambil nama item dari aria-label di row (bukan anchor)
-                    // karena aria-label di row lebih akurat berisi nama folder
-                    let name = '';
-
-                    // Cari aria-label yang mengandung nama (bukan navigasi)
-                    const ariaEls = row.querySelectorAll('[aria-label]');
-                    for (const el of ariaEls) {
-                        const raw = el.getAttribute('aria-label') || '';
-                        // Abaikan aria-label yang sangat pendek (ikon, tombol)
-                        if (raw.length < 3) continue;
-                        // Abaikan jika ini adalah label aksi (Lebih banyak, Bagikan, dsb)
-                        const skipWords = ['lebih banyak', 'bagikan', 'lihat detail', 'pilih', 'opsi', 'tindakan', 'more actions', 'share'];
-                        if (skipWords.some(w => raw.toLowerCase().includes(w))) continue;
-                        
-                        name = raw;
-                        break;
+                // Jika belum ketemu, cek anchor di dalamnya
+                if (!id) {
+                    const anchor = container.querySelector('a[href]');
+                    if (anchor) {
+                        const href = anchor.getAttribute('href') || '';
+                        const match = href.match(/\/(?:folders|file\/d)\/([a-zA-Z0-9_-]{15,})/);
+                        if (match) id = match[1];
                     }
-
-                    if (!name) {
-                        // Fallback: aria-label dari anchor itu sendiri
-                        name = anchor.getAttribute('aria-label') || anchor.getAttribute('title') || '';
-                    }
-
-                    if (!name) {
-                        // Fallback: innerText baris pertama yang tidak kosong
-                        const lines = row.innerText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                        if (lines.length > 0) name = lines[0];
-                    }
-
-                    // Bersihkan prefix bahasa Indonesia/Inggris:
-                    // "Folder, Nama" → "Nama"
-                    // "Folder bersama, Nama" → "Nama"  
-                    // "File, Nama" → "Nama"
-                    name = name
-                        .replace(/^Folder bersama,?\s*/i, '')
-                        .replace(/^Folder dibagikan,?\s*/i, '')
-                        .replace(/^Shared folder,?\s*/i, '')
-                        .replace(/^(Folder|File),?\s*/i, '')
-                        .trim();
-
-                    // Hapus suffix tipe file yang ikut terbaca
-                    // "Nama folder Google Spreadsheet Dibagikan" → "Nama folder"
-                    name = name
-                        .replace(/\s*(Google Spreadsheet|Google Docs|Google Slides|Microsoft Word|Microsoft Excel|PDF|Dibagikan|Shared)\s*$/i, '')
-                        .trim();
-
-                    // Abaikan jika nama terlalu pendek
-                    if (!name || name.length < 2) break;
-
-                    const link = `https://drive.google.com/drive/folders/${id}?usp=drive_link`;
-                    filesMap.set(id, { id, name, link, isFolder: true });
-                    break; // Satu anchor per row sudah cukup
                 }
+
+                if (!id || id.length < 15 || filesMap.has(id)) return;
+
+                // Ambil aria-label terbaik
+                let labelCandidate = container.getAttribute('aria-label');
+                if (!labelCandidate || labelCandidate.length < 3) {
+                    const labeledChild = container.querySelector('[aria-label]');
+                    if (labeledChild) {
+                        labelCandidate = labeledChild.getAttribute('aria-label');
+                    }
+                }
+
+                // Parse aria-label untuk nama dan penentuan folder
+                let { name, isFolder } = parseDriveAriaLabel(labelCandidate);
+
+                // Fallback nama dari innerText jika aria-label tidak memadai
+                if (!name || name.length < 2) {
+                    const textLines = container.innerText.split('\n').map(s => s.trim()).filter(Boolean);
+                    // Filter teks aksi navigasi
+                    const filteredLines = textLines.filter(line => {
+                        const lower = line.toLowerCase();
+                        return !['nama', 'pemilik', 'tanggal diubah', 'ukuran file', 'terakhir diubah', 'saya'].includes(lower);
+                    });
+                    if (filteredLines.length > 0) {
+                        name = filteredLines[0];
+                    }
+                }
+
+                // Cek apakah item adalah folder berdasarkan icon/konten jika belum terdeteksi
+                if (!isFolder) {
+                    const html = container.innerHTML.toLowerCase();
+                    if (html.includes('folder') || (labelCandidate && labelCandidate.toLowerCase().includes('folder'))) {
+                        isFolder = true;
+                    }
+                }
+
+                // Validasi nama
+                if (!name || name.length < 2) return;
+
+                const link = isFolder 
+                    ? `https://drive.google.com/drive/folders/${id}?usp=drive_link`
+                    : `https://drive.google.com/file/d/${id}/view?usp=drive_link`;
+
+                filesMap.set(id, { id, name, link, isFolder });
             });
 
             // ================================================================
-            // FALLBACK: Jika tidak ada row/listitem (mungkin Grid View)
-            // Gunakan pendekatan lama tapi dengan filter ketat
+            // STRATEGI 2: Fallback dengan query langsung div[data-id]
+            // (Pendekatan asli yang sangat andal di Google Drive)
+            // ================================================================
+            if (filesMap.size === 0) {
+                const elements = document.querySelectorAll('div[data-id], [data-id]');
+                elements.forEach(el => {
+                    const id = el.getAttribute('data-id');
+                    if (!id || id.length < 20 || filesMap.has(id)) return;
+
+                    // Skip navigasi kiri & breadcrumb atas
+                    if (el.closest('[role="navigation"], nav, header')) return;
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top < 120 && rect.height < 50) return;
+
+                    let name = "";
+                    const labelEl = el.querySelector('[aria-label]') || (el.hasAttribute('aria-label') ? el : null);
+                    let isFolder = false;
+
+                    if (labelEl) {
+                        const labelText = labelEl.getAttribute('aria-label') || '';
+                        const parsed = parseDriveAriaLabel(labelText);
+                        name = parsed.name;
+                        isFolder = parsed.isFolder;
+                    }
+
+                    if (!name) {
+                        const lines = el.innerText.split('\n').map(l => l.trim()).filter(Boolean);
+                        if (lines.length > 0) name = lines[0];
+                    }
+
+                    if (!isFolder && el.innerHTML.toLowerCase().includes('folder')) {
+                        isFolder = true;
+                    }
+
+                    if (name && name.length >= 2) {
+                        const link = isFolder 
+                            ? `https://drive.google.com/drive/folders/${id}?usp=drive_link`
+                            : `https://drive.google.com/file/d/${id}/view?usp=drive_link`;
+
+                        filesMap.set(id, { id, name, link, isFolder });
+                    }
+                });
+            }
+
+            // ================================================================
+            // STRATEGI 3: Fallback ke seluruh anchor a[href] (jika Drive berubah)
             // ================================================================
             if (filesMap.size === 0) {
                 document.querySelectorAll('a[href]').forEach(anchor => {
                     const href = anchor.getAttribute('href') || '';
-                    const folderMatch = href.match(/\/drive\/folders\/([a-zA-Z0-9_-]{10,})/);
-                    if (!folderMatch) return;
+                    const match = href.match(/\/(?:folders|file\/d)\/([a-zA-Z0-9_-]{15,})/);
+                    if (!match) return;
 
-                    const id = folderMatch[1];
+                    const id = match[1];
                     if (!id || filesMap.has(id)) return;
+                    if (anchor.closest('[role="navigation"], nav, header')) return;
 
-                    // Abaikan breadcrumb: posisi di atas halaman
-                    const rect = anchor.getBoundingClientRect();
-                    if (rect.top < 150 && rect.height < 50) return;
-
-                    // Abaikan jika dalam elemen navigasi
-                    if (anchor.closest('[role="navigation"]') || anchor.closest('nav')) return;
-
+                    const isFolder = href.includes('/folders/');
                     let name = anchor.getAttribute('aria-label') || anchor.getAttribute('title') || '';
-                    if (!name) {
-                        const lines = anchor.innerText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    if (name) {
+                        name = parseDriveAriaLabel(name).name;
+                    } else {
+                        const lines = anchor.innerText.split('\n').map(l => l.trim()).filter(Boolean);
                         if (lines.length > 0) name = lines[0];
                     }
 
-                    name = name
-                        .replace(/^Folder bersama,?\s*/i, '')
-                        .replace(/^(Folder|File),?\s*/i, '')
-                        .replace(/\s*(Google Spreadsheet|Google Docs|Dibagikan|Shared)\s*$/i, '')
-                        .trim();
+                    if (name && name.length >= 2) {
+                        const link = isFolder 
+                            ? `https://drive.google.com/drive/folders/${id}?usp=drive_link`
+                            : `https://drive.google.com/file/d/${id}/view?usp=drive_link`;
 
-                    if (!name || name.length < 2) return;
-
-                    const link = `https://drive.google.com/drive/folders/${id}?usp=drive_link`;
-                    filesMap.set(id, { id, name, link, isFolder: true });
+                        filesMap.set(id, { id, name, link, isFolder });
+                    }
                 });
             }
 
