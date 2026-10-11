@@ -9,41 +9,51 @@
 </head>
 <body>
     <div class="app-container">
-        <header class="header">
+        <header class="header" style="position: relative;">
             <div class="header-bg"></div>
             <h1>Ekstraktor E-Kinerja</h1>
             <p class="subtitle">Mempermudah input Rencana Aksi & Target</p>
             <div class="author">dibuat oleh doni aries 2026</div>
+            <button id="btn-reload-ext" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: white; cursor: pointer; opacity: 0.7; padding: 5px;" title="Reload Ekstensi">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
         </header>
 
         <main class="content">
             <!-- TABS -->
             <div class="tabs-container" style="display:flex; margin-bottom:15px; border-radius:8px; background:var(--surface); overflow:hidden; border:1px solid var(--border);">
-                <button id="tab-aksi" class="tab-btn active" style="flex:1; padding:10px; border:none; background:var(--accent); color:white; font-weight:600; cursor:pointer;">Rencana Aksi</button>
-                <button id="tab-bukti" class="tab-btn" style="flex:1; padding:10px; border:none; background:transparent; color:var(--text-secondary); font-weight:600; cursor:pointer;">Bukti Dukung</button>
+                <button id="tab-aksi" class="tab-btn active" style="flex:1; padding:10px; border:none; background:var(--accent); color:white; font-weight:600; cursor:pointer; font-size: 12px;">Rencana Aksi</button>
+                <button id="tab-bukti" class="tab-btn" style="flex:1; padding:10px; border:none; background:transparent; color:var(--text-secondary); font-weight:600; cursor:pointer; font-size: 12px;">Bukti & Realisasi</button>
             </div>
 
             <!-- VIEW AKSI -->
             <div id="view-aksi">
-            <div class="glass-card" id="input-section">
-                <div class="card-header">
-                    <span class="step-number">1</span>
-                    <h2>Ambil Data SKP</h2>
-                </div>
-                <p class="instructions">Buka tab Google Sheet yang berisi data SKP, lalu klik tombol di bawah ini:</p>
-                <div class="actions" style="flex-direction: column;">
-                    <button id="btn-fetch-sheet" class="btn-primary" style="padding: 12px; background: #10b981;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Ambil dari Google Sheet Aktif
+            <div class="glass-card" id="aksi-input-card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="step-number">1</span>
+                        <h2>Ambil Data SKP</h2>
+                    </div>
+                    <button id="toggle-aksi-input" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer;">
+                        <svg id="icon-toggle-aksi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                     </button>
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <button id="btn-parse-clipboard" class="btn-primary" style="flex: 2; background: var(--accent);">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                            Paste dari Clipboard
+                </div>
+                <div id="aksi-input-content">
+                    <p class="instructions">Buka tab Google Sheet yang berisi data SKP, lalu klik tombol di bawah ini:</p>
+                    <div class="actions" style="flex-direction: column;">
+                        <button id="btn-fetch-sheet" class="btn-primary" style="padding: 12px; background: #10b981;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Ambil dari Google Sheet Aktif
                         </button>
-                        <button id="btn-clear" class="btn-secondary" style="flex: 1;" title="Hapus Data">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
+                        <div style="display: flex; gap: 10px; margin-top: 5px;">
+                            <button id="btn-parse-clipboard" class="btn-primary" style="flex: 2; background: var(--accent);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                Paste dari Clipboard
+                            </button>
+                            <button id="btn-clear" class="btn-secondary" style="flex: 1;" title="Hapus Data">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -69,31 +79,45 @@
 
             <!-- VIEW BUKTI -->
             <div id="view-bukti" style="display:none;">
-                <div class="glass-card">
-                    <div class="card-header">
-                        <span class="step-number">1</span>
-                        <h2>Ambil Data Drive</h2>
+                <div class="glass-card" id="drive-input-card">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="step-number">1</span>
+                            <h2>Ambil Data Drive</h2>
+                        </div>
+                        <button id="toggle-drive-input" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer;">
+                            <svg id="icon-toggle-drive" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </button>
                     </div>
-                    <ol class="instructions" style="margin-left: 15px; margin-bottom: 15px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                        <li>Buka folder <b>Google Drive</b> Anda (berisi Bukti Dukung).</li>
-                        <li>Pastikan tab Drive tersebut sedang aktif.</li>
-                        <li>Klik tombol <b>Ambil Folder</b> di bawah ini.</li>
-                    </ol>
-                    <button id="btn-fetch-drive" class="btn-primary" style="padding: 12px; background: #8b5cf6; width:100%; justify-content:center;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.3-3-2.7-5.4-5.8-5.6-3.6-.2-6.6 2.5-7.1 5.9-.2.8-.2 1.7 0 2.5-1.9.5-3.3 2.1-3.4 4.1-.2 2.3 1.7 4.5 4 4.5h14c1.5 0 2.9-1 3.5-2.4 0-.1 0-.1-.1-1.6z"></path><path d="M12 11v7"></path><path d="M9 14l3-3 3 3"></path></svg>
-                        Ambil Folder dari Drive Aktif
-                    </button>
+                    <div id="drive-input-content">
+                        <ol class="instructions" style="margin-left: 15px; margin-bottom: 15px; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                            <li>Buka folder <b>Google Drive</b> Anda (berisi Bukti Dukung).</li>
+                            <li>Pastikan tab Drive tersebut sedang aktif.</li>
+                            <li>Klik tombol <b>Ambil Folder</b> di bawah ini.</li>
+                        </ol>
+                        <button id="btn-fetch-drive" class="btn-primary" style="padding: 12px; background: #8b5cf6; width:100%; justify-content:center;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.6-2-2.4-3.5-4.4-3.5h-1.2c-.3-3-2.7-5.4-5.8-5.6-3.6-.2-6.6 2.5-7.1 5.9-.2.8-.2 1.7 0 2.5-1.9.5-3.3 2.1-3.4 4.1-.2 2.3 1.7 4.5 4 4.5h14c1.5 0 2.9-1 3.5-2.4 0-.1 0-.1-.1-1.6z"></path><path d="M12 11v7"></path><path d="M9 14l3-3 3 3"></path></svg>
+                            Ambil Folder dari Drive Aktif
+                        </button>
+                    </div>
                 </div>
+
+
                 
                 <div class="glass-card" id="drive-results-section" style="display: none; margin-top:15px;">
-                    <div class="card-header">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span class="step-number">2</span>
                             <h2>Isi ke E-Kinerja</h2>
                         </div>
-                        <span class="badge" id="drive-count-badge">0 file</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="badge" id="drive-count-badge">0 file</span>
+                            <button id="btn-clear-drive" class="btn-secondary" style="padding:4px 8px;" title="Bersihkan">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
                     </div>
-                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Buka form <b>Tambah Bukti Dukung</b> di E-Kinerja, lalu klik tombol isi pada file di bawah ini.</p>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Isi Bukti Dukung & Realisasi di bawah ini.</p>
                     
                     <div class="search-box">
                         <input type="text" id="search-drive-input" placeholder="Cari nama file...">
